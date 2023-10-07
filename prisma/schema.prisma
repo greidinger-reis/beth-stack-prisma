@@ -1,0 +1,57 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id     String @id @unique
+    handle String
+
+    auth_session Session[]
+    key          Key[]
+    Tweet        Tweet[]
+
+    @@map("user")
+}
+
+model Session {
+    id             String @id @unique
+    user           User   @relation(references: [id], fields: [user_id], onDelete: Cascade)
+    active_expires BigInt
+    idle_expires   BigInt
+
+    user_id String
+
+    @@index([user_id])
+    @@map("user_session")
+}
+
+model Key {
+    id              String  @id @unique
+    hashed_password String?
+    user            User    @relation(references: [id], fields: [user_id], onDelete: Cascade)
+
+    user_id String
+
+    @@index([user_id])
+    @@map("user_key")
+}
+
+model Tweet {
+    id        String   @id @unique @default(cuid())
+    author    User     @relation(fields: [authorId], references: [id])
+    content   String
+    createdAt DateTime @default(now()) @map("created_at")
+
+    authorId String @map("author_id")
+
+    @@index([authorId, createdAt])
+    @@map("tweet")
+}
